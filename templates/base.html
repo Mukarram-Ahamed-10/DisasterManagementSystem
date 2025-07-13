@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Disaster Management System{% endblock %}</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-shield-alt text-danger me-2"></i>
+                Disaster Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-line me-1"></i>Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('reports', period='weekly') }}">Weekly</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports', period='monthly') }}">Monthly</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports', period='yearly') }}">Yearly</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports') }}">All Reports</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('donations') }}">
+                            <i class="fas fa-heart me-1"></i>Donations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('safety') }}">
+                            <i class="fas fa-first-aid me-1"></i>Safety
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('news') }}">
+                            <i class="fas fa-broadcast-tower me-1"></i>Alerts & News
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('resources') }}">
+                            <i class="fas fa-boxes me-1"></i>Resources
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Emergency Contacts</h5>
+                    <p class="mb-1"><i class="fas fa-phone me-2"></i>Emergency: 911</p>
+                    <p class="mb-1"><i class="fas fa-phone me-2"></i>Disaster Hotline: 1-800-DISASTER</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>About</h5>
+                    <p class="mb-0">Disaster Management System - Coordinating relief efforts and emergency response.</p>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Disaster Management System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

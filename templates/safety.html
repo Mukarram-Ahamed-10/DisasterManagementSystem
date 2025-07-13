@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Safety Measures - Disaster Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-first-aid text-success me-3"></i>
+                Safety Measures & Policies
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('safety') }}" 
+                   class="btn btn-outline-success {{ 'active' if not current_type else '' }}">
+                    All Types
+                </a>
+                {% for disaster_type in disaster_types %}
+                    <a href="{{ url_for('safety', disaster_type=disaster_type) }}" 
+                       class="btn btn-outline-success {{ 'active' if current_type == disaster_type else '' }}">
+                        {{ disaster_type }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if policies %}
+            {% for policy in policies %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <span class="badge bg-{{ 'danger' if policy.disaster_type in ['Hurricane', 'Earthquake'] else 'warning' if policy.disaster_type in ['Wildfire', 'Tornado'] else 'info' }} me-2">
+                                    {{ policy.disaster_type }}
+                                </span>
+                                {{ policy.title }}
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{{ 'danger' if policy.priority == 1 else 'warning' if policy.priority == 2 else 'secondary' }} me-2">
+                                    Priority {{ policy.priority }}
+                                </span>
+                                <small class="text-muted">
+                                    Updated: {{ policy.last_updated.strftime('%Y-%m-%d') if policy.last_updated else 'Unknown' }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ policy.content }}</p>
+                        
+                        <!-- Additional safety tips based on disaster type -->
+                        {% if policy.disaster_type == 'Hurricane' %}
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Hurricane Safety Checklist:</h6>
+                                <ul class="mb-0">
+                                    <li>Stock up on water (1 gallon per person per day for 3 days)</li>
+                                    <li>Prepare non-perishable food for 3 days</li>
+                                    <li>Secure outdoor furniture and decorations</li>
+                                    <li>Have battery-powered radio and flashlights ready</li>
+                                    <li>Fill vehicle gas tanks</li>
+                                </ul>
+                            </div>
+                        {% elif policy.disaster_type == 'Earthquake' %}
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Earthquake Response:</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Drop:</strong> Get on hands and knees</li>
+                                    <li><strong>Cover:</strong> Protect head and neck under desk/table</li>
+                                    <li><strong>Hold On:</strong> Hold onto shelter and be prepared to move</li>
+                                    <li>Stay away from windows, mirrors, and heavy objects</li>
+                                    <li>If outdoors, move away from buildings and power lines</li>
+                                </ul>
+                            </div>
+                        {% elif policy.disaster_type == 'Wildfire' %}
+                            <div class="alert alert-danger">
+                                <h6><i class="fas fa-fire me-2"></i>Wildfire Evacuation:</h6>
+                                <ul class="mb-0">
+                                    <li>Have a "go bag" ready with essentials</li>
+                                    <li>Know multiple evacuation routes</li>
+                                    <li>Remove flammable vegetation around home</li>
+                                    <li>Install fire-resistant materials on roof/exterior</li>
+                                    <li>Register for emergency alert systems</li>
+                                </ul>
+                            </div>
+                        {% elif policy.disaster_type == 'Flood' %}
+                            <div class="alert alert-primary">
+                                <h6><i class="fas fa-tint me-2"></i>Flood Safety:</h6>
+                                <ul class="mb-0">
+                                    <li>Never drive through flooded roads</li>
+                                    <li>Move to higher ground immediately</li>
+                                    <li>Avoid walking in moving water</li>
+                                    <li>Stay away from downed power lines</li>
+                                    <li>Have emergency supplies on upper floors</li>
+                                </ul>
+                            </div>
+                        {% elif policy.disaster_type == 'Tornado' %}
+                            <div class="alert alert-secondary">
+                                <h6><i class="fas fa-wind me-2"></i>Tornado Protection:</h6>
+                                <ul class="mb-0">
+                                    <li>Go to lowest floor of sturdy building</li>
+                                    <li>Stay in small interior room (closet, bathroom)</li>
+                                    <li>Stay away from windows and large roof spans</li>
+                                    <li>Protect head and neck with arms</li>
+                                    <li>If outside, lie flat in low area away from cars</li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No safety policies found</h4>
+                    <p class="text-muted">
+                        {% if current_type %}
+                            No safety policies available for {{ current_type }}.
+                        {% else %}
+                            No safety policies available in the system.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Emergency Contacts -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-phone text-danger me-2"></i>Emergency Contacts
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="bg-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-phone fa-2x"></i>
+                            </div>
+                            <h6 class="mt-2 mb-1">Emergency Services</h6>
+                            <p class="h4 text-danger">911</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-exclamation-triangle fa-2x text-dark"></i>
+                            </div>
+                            <h6 class="mt-2 mb-1">Disaster Hotline</h6>
+                            <p class="h6 text-warning">1-800-DISASTER</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-medkit fa-2x"></i>
+                            </div>
+                            <h6 class="mt-2 mb-1">Poison Control</h6>
+                            <p class="h6 text-info">1-800-222-1222</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </div>
+                            <h6 class="mt-2 mb-1">Red Cross</h6>
+                            <p class="h6 text-success">1-800-RED-CROSS</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Kit Checklist -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list-check me-2"></i>Emergency Kit Checklist
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Basic Supplies:</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Water (1 gallon per person per day for 3 days)
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Non-perishable food for 3 days
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Battery-powered or hand crank radio
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Flashlight and extra batteries
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                First aid kit
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Additional Items:</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Whistle for signaling help
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Dust masks and plastic sheeting
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Moist towelettes and garbage bags
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Wrench or pliers to turn off utilities
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2">
+                                Manual can opener
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

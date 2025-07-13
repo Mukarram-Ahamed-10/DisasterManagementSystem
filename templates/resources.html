@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Resource Management - Disaster Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-boxes text-info me-3"></i>
+                Resource Management
+            </h1>
+            <div class="text-end">
+                <div class="badge bg-info fs-6">
+                    <i class="fas fa-warehouse me-1"></i>
+                    {{ resources|length }} Resource Types
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Inventory -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-warehouse me-2"></i>Relief Resource Inventory
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if resources %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Resource Name</th>
+                                    <th>Available Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Cost per Unit</th>
+                                    <th>Total Value</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in resources %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-box me-2 text-muted"></i>
+                                            {{ resource.resource_name }}
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold {{ 'text-success' if resource.quantity > 100 else 'text-warning' if resource.quantity > 50 else 'text-danger' }}">
+                                                {{ resource.quantity }}
+                                            </span>
+                                        </td>
+                                        <td>{{ resource.unit }}</td>
+                                        <td>₹{{ "%.2f"|format(resource.cost_per_unit) }}</td>
+                                        <td class="fw-bold">₹{{ "%.2f"|format(resource.quantity * resource.cost_per_unit) }}</td>
+                                        <td>
+                                            {% if resource.quantity > 100 %}
+                                                <span class="badge bg-success">Well Stocked</span>
+                                            {% elif resource.quantity > 50 %}
+                                                <span class="badge bg-warning">Low Stock</span>
+                                            {% elif resource.quantity > 0 %}
+                                                <span class="badge bg-danger">Critical Low</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">Out of Stock</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No resources found</h4>
+                        <p class="text-muted">No relief resources available in the system.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Allocation History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Resource Allocation History
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if allocations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Disaster Type</th>
+                                    <th>Resource</th>
+                                    <th>Quantity Allocated</th>
+                                    <th>Severity</th>
+                                    <th>Allocation Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for allocation in allocations %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {{ allocation.location }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if allocation.disaster_type in ['Hurricane', 'Earthquake', 'Wildfire'] else 'warning' if allocation.disaster_type in ['Tornado', 'Flood'] else 'secondary' }}">
+                                                {{ allocation.disaster_type }}
+                                            </span>
+                                        </td>
+                                        <td>{{ allocation.resource_name }}</td>
+                                        <td>
+                                            <span class="fw-bold">{{ allocation.allocated_quantity }}</span>
+                                            <small class="text-muted">{{ allocation.unit }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% for i in range(1, 6) %}
+                                                    <i class="fas fa-star {{ 'text-warning' if i <= allocation.severity else 'text-muted' }}"></i>
+                                                {% endfor %}
+                                                <span class="ms-2">{{ allocation.severity }}/5</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ allocation.allocation_date.strftime('%Y-%m-%d') if allocation.allocation_date else 'Unknown' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No allocation history</h4>
+                        <p class="text-muted">No resource allocations have been made yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Distribution Chart -->
+{% if resources %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Resource Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="resourceChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calculator me-2"></i>Resource Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set total_value = resources | sum(attribute='quantity') * resources | sum(attribute='cost_per_unit') %}
+                {% set total_items = resources | sum(attribute='quantity') %}
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h5 class="text-primary mb-1">{{ total_items }}</h5>
+                            <small class="text-muted">Total Items</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h5 class="text-success mb-1">₹{{ "%.2f"|format(total_value) }}</h5>
+                            <small class="text-muted">Total Value</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">Top Resources by Quantity:</h6>
+                    {% for resource in resources | sort(attribute='quantity', reverse=True) %}
+                        {% if loop.index <= 5 %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>{{ resource.resource_name }}</span>
+                                <span class="badge bg-primary">{{ resource.quantity }}</span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Resource levels are monitored continuously. 
+                    Automatic reordering occurs when supplies reach critical levels.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Resource Distribution Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const resources = {{ resources | tojson }};
+    
+    if (resources && resources.length > 0) {
+        const ctx = document.getElementById('resourceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: resources.map(r => r.resource_name),
+                datasets: [{
+                    data: resources.map(r => r.quantity),
+                    backgroundColor: [
+                        '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997',
+                        '#17a2b8', '#6f42c1', '#e83e8c', '#6c757d', '#343a40'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

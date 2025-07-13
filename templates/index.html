@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Disaster Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-tachometer-alt text-primary me-3"></i>
+                Emergency Dashboard
+            </h1>
+            <div class="text-end">
+                <div class="badge bg-danger fs-6">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Live Status
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Disasters</h5>
+                        <h2 class="mb-0">{{ stats.total_disasters or 0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Active (30 days)</h5>
+                        <h2 class="mb-0">{{ stats.active_disasters or 0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-fire fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Donations</h5>
+                        <h2 class="mb-0">₹{{ "%.2f"|format(stats.total_donations or 0) }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-hand-holding-usd fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Available Resources</h5>
+                        <h2 class="mb-0">{{ stats.available_resources or 0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Severity Distribution Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Disaster Severity Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="severityChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Disasters -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Disasters
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_disasters %}
+                    <div class="list-group list-group-flush">
+                        {% for disaster in recent_disasters %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ disaster.location }}</h6>
+                                    <p class="mb-1">{{ disaster.disaster_type }}</p>
+                                    <small class="text-muted">
+                                        {{ disaster.report_date.strftime('%Y-%m-%d %H:%M') if disaster.report_date else 'Unknown' }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-{{
+                                        'danger' if disaster.severity >= 4
+                                        else 'warning' if disaster.severity >= 3
+                                        else 'secondary' }}">
+                                        Severity {{ disaster.severity }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent disasters reported.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent News -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-newspaper me-2"></i>Latest Emergency Updates
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_news %}
+                    <div class="row">
+                        {% for news in recent_news %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge bg-{{
+                                                'danger' if news.news_type == 'warning'
+                                                else 'info' if news.news_type == 'prediction'
+                                                else 'success' }}">
+                                                {{ news.news_type.title() }}
+                                            </span>
+                                            <small class="text-muted">{{ news.publish_date.strftime('%m/%d') if news.publish_date else 'Unknown' }}</small>
+                                        </div>
+                                        <h6 class="card-title">{{ news.title }}</h6>
+                                        <p class="card-text">
+                                            {{ news.content[:100] if news.content else news.summary[:100] if news.summary else 'No content available' }}...
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ news.location }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent news available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Severity Distribution Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const severityData = {{ stats.severity_distribution | tojson | safe }};
+
+    if (severityData && severityData.length > 0) {
+        const ctx = document.getElementById('severityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: severityData.map(item => `Level ${item.severity}`),
+                datasets: [{
+                    data: severityData.map(item => item.count || item["count"] || item["?column?"]),
+                    backgroundColor: [
+                        '#28a745', // Level 1 - Green
+                        '#ffc107', // Level 2 - Yellow
+                        '#fd7e14', // Level 3 - Orange
+                        '#dc3545', // Level 4 - Red
+                        '#6f42c1'  // Level 5 - Purple
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Disaster Reports - Disaster Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-chart-line text-primary me-3"></i>
+                Disaster Reports
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('reports', period='weekly') }}" 
+                   class="btn btn-outline-primary {{ 'active' if current_period == 'weekly' else '' }}">
+                    Weekly
+                </a>
+                <a href="{{ url_for('reports', period='monthly') }}" 
+                   class="btn btn-outline-primary {{ 'active' if current_period == 'monthly' else '' }}">
+                    Monthly
+                </a>
+                <a href="{{ url_for('reports', period='yearly') }}" 
+                   class="btn btn-outline-primary {{ 'active' if current_period == 'yearly' else '' }}">
+                    Yearly
+                </a>
+                <a href="{{ url_for('reports') }}" 
+                   class="btn btn-outline-primary {{ 'active' if current_period == 'all' else '' }}">
+                    All Time
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    {{ current_period.title() if current_period != 'all' else 'All' }} Disaster Reports
+                    <span class="badge bg-primary ms-2">{{ disasters|length }} reports</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if disasters %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Disaster Type</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Report Date</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for disaster in disasters %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {{ disaster.location }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if disaster.disaster_type in ['Hurricane', 'Earthquake', 'Wildfire'] else 'warning' if disaster.disaster_type in ['Tornado', 'Flood'] else 'secondary' }}">
+                                                {{ disaster.disaster_type }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% for i in range(1, 6) %}
+                                                    <i class="fas fa-star {{ 'text-warning' if i <= disaster.severity else 'text-muted' }}"></i>
+                                                {% endfor %}
+                                                <span class="ms-2 fw-bold">{{ disaster.severity }}/5</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if disaster.status == 'Resolved' else 'danger' if disaster.status == 'Active' else 'warning' }}">
+                                                {{ disaster.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ disaster.report_date.strftime('%Y-%m-%d %H:%M') if disaster.report_date else 'Unknown' }}</td>
+                                        <td>
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ disaster.description }}">
+                                                {{ disaster.description or 'No description available' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No disaster reports found</h4>
+                        <p class="text-muted">
+                            {% if current_period != 'all' %}
+                                No disasters reported in the {{ current_period }} period.
+                            {% else %}
+                                No disaster reports available in the system.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+{% if disasters %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Disaster Types Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="disasterTypeChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-map-marked-alt me-2"></i>Most Affected Locations
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% set location_counts = {} %}
+                    {% for disaster in disasters %}
+                        {% if location_counts.update({disaster.location: location_counts.get(disaster.location, 0) + 1}) %}{% endif %}
+                    {% endfor %}
+                    {% for location, count in location_counts.items() | sort(attribute=1, reverse=True) %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ location }}</span>
+                            <span class="badge bg-primary">{{ count }} disasters</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Disaster Type Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const disasters = {{ disasters | tojson }};
+    
+    // Count disasters by type
+    const typeCount = {};
+    disasters.forEach(disaster => {
+        typeCount[disaster.disaster_type] = (typeCount[disaster.disaster_type] || 0) + 1;
+    });
+    
+    const ctx = document.getElementById('disasterTypeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(typeCount),
+            datasets: [{
+                label: 'Number of Disasters',
+                data: Object.values(typeCount),
+                backgroundColor: [
+                    '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997',
+                    '#17a2b8', '#6f42c1', '#e83e8c', '#6c757d', '#343a40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
